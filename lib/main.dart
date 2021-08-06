@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:game/file.dart';
+import 'package:game/fight/widget.dart';
 
 void main() {
   runApp(MyApp());
