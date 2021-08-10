@@ -1,11 +1,16 @@
-class Map {
+class FightBoardMap {
   late List<List<MapTile>> tiles;
 
-  Map(this.tiles);
+  FightBoardMap(this.tiles);
 
-  Map.generate({required int width, required int height}) {
-    tiles = List.generate(height,
-            (x) => List.generate(width, (y) => MapTile(x, y, TileType.GROUND)));
+  FightBoardMap.generate({required int width, required int height}) {
+    tiles = List.generate(
+        width,
+        (y) => List.generate(
+          height,
+          (x) => MapTile(y, x, TileType.GROUND)
+        )
+    );
   }
 }
 

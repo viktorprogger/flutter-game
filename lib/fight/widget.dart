@@ -1,99 +1,133 @@
 import 'package:flutter/material.dart';
 import 'package:game/fight/character.dart';
 import 'package:game/fight/map.dart';
+import 'package:game/fight/state.dart';
+import 'package:provider/provider.dart';
 
 class BattleBoard extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
-    return BattleBoardState(map: Map.generate(width: 7, height: 10));
+    return BattleBoardState(map: FightBoardMap.generate(width: 7, height: 10));
   }
 }
 
 class BattleBoardState extends State<BattleBoard> {
-  late HeroCharacter _hero;
-  final Map map;
+  final FightBoardMap map;
 
   BattleBoardState({required this.map});
 
   @override
   Widget build(BuildContext context) {
-    // _hero = HeroCharacter();
-
-    int width = map.tiles[0].length;
-    int height = map.tiles.length;
-    int length = width * height;
-
-    var list = List.generate(length, (index) {
-      int column = index % (width);
-      int row = index ~/ (width);
-
-      if (row == height - 1 && column == width ~/ 2) {
-        return HeroWidget(
-          hero: HeroCharacter(
-            tile: map.tiles[row][column],
-          ),
-        );
-      }
-
-      return MonsterWidget(
-        character:
-        Monster(monsterType: MonsterType.Red, tile: map.tiles[row][column]),
-      );
-    });
+    int height = map.tiles[0].length;
+    int width = map.tiles.length;
 
     return Material(
-        child: GridView.count(
-          crossAxisCount: width,
-          physics: NeverScrollableScrollPhysics(),
-          children: list,
-        )
+      child: Stack(
+        children: [
+          // Positioned(child: Text('Hero is here')),
+          Container(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List<Widget>.generate(
+                map.tiles.length,
+                (column) => Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: List<Widget>.generate(
+                      map.tiles[0].length,
+                      (row) => false && row == height - 1 && column == width ~/ 2
+                          ? Expanded(
+                              child:HeroWidget(
+                                character: HeroCharacter(
+                                  tile: map.tiles[column][row]
+                                ),
+                              )
+                            )
+                          : MonsterWidget(tile: map.tiles[column][row], ),
+                    ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class MonsterWidget extends StatelessWidget {
-  final Character character;
 
-  MonsterWidget({required this.character});
+class MonsterWidget extends StatefulWidget {
 
-  @override
-  Widget build(BuildContext context) {
-    IconData icon = character.type == CharacterType.Hero
-        ? Icons.self_improvement
-        : Icons.sentiment_very_dissatisfied;
+  final MapTile tile;
+  late Monster character = Monster.random(tile: tile);
 
-    return new Icon(
-      icon,
-    );
-  }
-}
-
-class HeroWidget extends StatefulWidget {
-  final HeroCharacter hero;
-
-  HeroWidget({required this.hero});
+  MonsterWidget({required this.tile});
 
   @override
   State<StatefulWidget> createState() {
-    return new HeroState();
+    return MonsterState(tile: tile, character: character);
   }
 }
 
-class HeroState extends State<HeroWidget> {
-  bool _pressed = false;
+class MonsterState extends State<MonsterWidget>
+    with SingleTickerProviderStateMixin {
+
+  final MapTile tile;
+  final Monster character;
+
+  MonsterState({required this.tile, required this.character});
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-        onPointerDown: (PointerDownEvent event) => setState(() => _pressed = true),
-        onPointerUp: (PointerUpEvent event) => setState(() => _pressed = false),
-        child: Container(
-            width: 800,
-            child: Icon(
-              Icons.self_improvement,
-              color: _pressed ? Colors.blue : Colors.pink,
-            )
-        )
+    return Expanded(
+      child: Consumer<FightBoardState>(
+        builder: (context, state, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: Offset.zero,
+              end: Offset(0, state.getMoveOffset(tile).toDouble())
+            ).animate(
+              CurvedAnimation(
+                parent: AnimationController(
+                  duration: const Duration(seconds: 2),
+                  vsync: this,
+                ), curve: Curves.ease
+              )
+            ),
+            child:GestureDetector(
+              onTap: () => print('test1'),
+              child: FractionallySizedBox(
+                widthFactor: 0.8,
+                heightFactor: 0.8,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(color: Colors.blueGrey),
+                  child: Icon(
+                    Icons.sentiment_very_dissatisfied,
+                    color: state.isPressed(character.tile) ? Colors.blue : Colors.pink,
+                  )
+                ),
+              )
+            ),
+          );
+        },
+      )
+    );
+  }
+}
+
+class HeroWidget extends StatelessWidget {
+  final Character character;
+
+  HeroWidget({required this.character});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<FightBoardState>(
+      builder: (context, state, child) {
+        return new Icon(
+          Icons.self_improvement,
+          color: state.isPressed(character.tile) ? Colors.blue : Colors.pink,
+        );
+      },
     );
   }
 }
