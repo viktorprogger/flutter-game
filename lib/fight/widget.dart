@@ -30,7 +30,8 @@ class BattleBoardState extends State<BattleBoard> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: List<Widget>.generate(
                 map.tiles.length,
-                (column) => Column(
+                (column) => Expanded(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: List<Widget>.generate(
                       map.tiles[0].length,
@@ -44,6 +45,7 @@ class BattleBoardState extends State<BattleBoard> {
                             )
                           : MonsterWidget(tile: map.tiles[column][row], ),
                     ),
+                  ),
                 ),
               ),
             ),
