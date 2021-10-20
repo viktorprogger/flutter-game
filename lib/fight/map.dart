@@ -1,5 +1,5 @@
 class FightBoardMap {
-  late List<List<MapTile>> tiles;
+  late final List<List<MapTile>> tiles;
 
   FightBoardMap(this.tiles);
 
